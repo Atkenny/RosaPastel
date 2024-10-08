@@ -4,6 +4,7 @@ import GraficoSalarios from './src/components/GraficoSalarios';
 import GraficoGeneros from './src/components/GraficoGeneros';
 import Formulario from './src/components/Formulario';
 import { collection, getDocs, query } from 'firebase/firestore';
+import GraficoReporteEnfermedades from './src/components/GraficoReporteEnfermedades';
 
 //Importación de conexión a firebase
 import db from './database/firebaseConfig';
@@ -17,6 +18,32 @@ export default function App() {
   });
   const [dataGeneros, setDataGeneros] = useState([]); // Para almacenar datos de géneros
 
+  const dataReporteEnfermedades = [
+    { date: "2017-01-05", count: 8 }, 
+    { date: "2017-01-19", count: 5 }, 
+    { date: "2017-02-06", count: 2 }, 
+    { date: "2017-02-20", count: 4 }, 
+    { date: "2017-03-07", count: 1 }, 
+    { date: "2017-03-21", count: 3 }, 
+    { date: "2017-04-05", count: 6 }, 
+    { date: "2017-04-19", count: 2 }, 
+    { date: "2017-05-03", count: 4 },
+    { date: "2017-05-17", count: 7 },
+    { date: "2017-06-06", count: 9 }, 
+    { date: "2017-06-20", count: 5 }, 
+    { date: "2017-07-05", count: 3 }, 
+    { date: "2017-07-19", count: 4 }, 
+    { date: "2017-08-07", count: 2 },  
+    { date: "2017-08-21", count: 8 },  
+    { date: "2017-09-06", count: 3 },
+    { date: "2017-09-20", count: 7 },
+    { date: "2017-10-04", count: 5 },
+    { date: "2017-10-18", count: 6 },
+    { date: "2017-11-06", count: 2 },
+    { date: "2017-11-20", count: 9 }, 
+    { date: "2017-12-05", count: 4 },
+    { date: "2017-12-19", count: 7 } 
+  ];
 
   // Carga de datos de salarios
   useEffect(() => {
@@ -70,6 +97,8 @@ export default function App() {
           }
         });
 
+       
+        
         // Formatear datos para el gráfico de pastel
         const totalData = [
           {
@@ -104,6 +133,7 @@ export default function App() {
         <Formulario setBandera={setBandera}/>
         <GraficoSalarios dataSalarios={dataSalarios}/>
         <GraficoGeneros dataGeneros={dataGeneros}/>
+        <GraficoReporteEnfermedades dataReporteEnfermedades={dataReporteEnfermedades}/>
       </ScrollView>
 
     </View>
