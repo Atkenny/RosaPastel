@@ -19,7 +19,7 @@ export default function Formulario({setBandera}) {
 
   const guardarDatos = async () => {
     try {
-      const docRef = await addDoc(collection(db, "usuario"), {
+      const docRef = await addDoc(collection(db, "personas"), {
         nombre: nombre,
         edad: edad,
         genero: genero,

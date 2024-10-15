@@ -3,18 +3,20 @@ import { StyleSheet, View, ScrollView } from 'react-native';
 import GraficoSalarios from './src/components/GraficoSalarios';
 import GraficoGeneros from './src/components/GraficoGeneros';
 import Formulario from './src/components/Formulario';
-import { collection, getDocs, query } from 'firebase/firestore';
 import GraficoReporteEnfermedades from './src/components/GraficoReporteEnfermedades';
+import GraficoBezier from './src/components/GraficoBezier';
+import { collection, getDocs, query } from 'firebase/firestore';
 
 //Importación de conexión a firebase
 import db from './database/firebaseConfig';
 
-export default function App() {
+
+export default function Graficos() {
 
   const [bandera, setBandera] = useState(false); // Variable bandera
   const [dataSalarios, setDataSalarios] = useState({
-    labels: [],
-    datasets: [{ data: [] }] // Inicializa datasets como un array con un objeto
+    labels: [''],
+    datasets: [{ data: [0] }]
   });
   const [dataGeneros, setDataGeneros] = useState([]); // Para almacenar datos de géneros
 
@@ -44,12 +46,12 @@ export default function App() {
     { date: "2017-12-05", count: 4 },
     { date: "2017-12-19", count: 7 } 
   ];
-
+  
   // Carga de datos de salarios
   useEffect(() => {
     const recibirDatosSalarios = async () => {
       try {
-        const q = query(collection(db, "usuario"));
+        const q = query(collection(db, "personas"));
         const querySnapshot = await getDocs(q);
         const nombres = [];
         const salarios = [];
@@ -58,8 +60,7 @@ export default function App() {
           const datosBD = doc.data();
           const { nombre, salario } = datosBD;
             nombres.push(nombre); // Agrega nombre a la lista
-            salarios.push(salario); // Agrega salario a la lista
-
+            salarios.push(salario); // Agrega edad a la lista
         });
 
         // Actualiza el estado con el formato requerido
@@ -81,7 +82,7 @@ export default function App() {
   useEffect(() => {
     const recibirDatosGeneros = async () => {
       try {
-        const q = query(collection(db, "usuario"));
+        const q = query(collection(db, "personas"));
         const querySnapshot = await getDocs(q);
         let masculino = 0;
         let femenino = 0;
@@ -97,21 +98,19 @@ export default function App() {
           }
         });
 
-       
-        
         // Formatear datos para el gráfico de pastel
         const totalData = [
           {
             name: "Masculino",
             population: masculino,
-            color: "rgba(131, 167, 234, 0.5)",
+            color: "rgba(131, 167, 234, 0.5)",  // Azul con 50% de intensidad
             legendFontColor: "#7F7F7F",
             legendFontSize: 12
           },
           {
             name: "Femenino",
             population: femenino,
-            color: "rgba(255, 105, 180, 0.5)",
+            color: "rgba(255, 105, 180, 0.5)",  // Rosa con 50% de intensidad
             legendFontColor: "#7F7F7F",
             legendFontSize: 12
           }
@@ -132,6 +131,7 @@ export default function App() {
       <ScrollView contentContainerStyle={styles.scrollView}>
         <Formulario setBandera={setBandera}/>
         <GraficoSalarios dataSalarios={dataSalarios}/>
+        <GraficoBezier dataSalarios={dataSalarios}/>
         <GraficoGeneros dataGeneros={dataGeneros}/>
         <GraficoReporteEnfermedades dataReporteEnfermedades={dataReporteEnfermedades}/>
       </ScrollView>
@@ -153,4 +153,4 @@ const styles = StyleSheet.create({
     marginTop: 10,
     padding: 10,
   },
-});
+}); 
