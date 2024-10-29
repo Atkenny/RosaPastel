@@ -1,73 +1,88 @@
-import React from 'react';
+import React, { useRef, useState } from 'react';
 import { View, Button, Alert, StyleSheet, Dimensions } from 'react-native';
 import { jsPDF } from 'jspdf';
-import * as FileSystem from 'expo-file-system'; // Manejo de archivos
-import * as Sharing from 'expo-sharing'; // Para compartir archivos
-import { LineChart} from "react-native-chart-kit";
+import * as FileSystem from 'expo-file-system';
+import * as Sharing from 'expo-sharing';
+import { captureRef } from 'react-native-view-shot';
+import { LineChart } from "react-native-chart-kit";
 
-export default function GraficoBezier({dataSalarios}) {
+export default function GraficoBezier({ dataSalarios }) {
+  const chartRef = useRef();
+  const screenWidth = Dimensions.get("window").width;
+  const chartWidth = screenWidth - screenWidth * 0.1; // Ancho ajustado según la pantalla
+  const chartHeight = 300; // Altura del gráfico
+  const [isSharing, setIsSharing] = useState(false); // Estado para controlar si se está compartiendo
 
   const generarPDF = async () => {
+    setIsSharing(true); // Deshabilitar el botón al iniciar la generación del PDF
     try {
+      // Capturar el gráfico con el tamaño actual
+      const uri = await captureRef(chartRef, {
+    		format: "png",
+    		quality: 1,
+   		  width: chartWidth,
+    		height: chartHeight,
+    });
+
       // Crear una instancia de jsPDF
       const doc = new jsPDF();
-
-      // Agregar título al PDF
       doc.text("Reporte de Salarios", 10, 10);
 
-      // Agregar los datos al PDF
+      // Leer la imagen capturada y agregarla al PDF
+      const chartImage = await FileSystem.readAsStringAsync(uri, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+      doc.addImage(`data:image/png;base64,${chartImage}`, "PNG", 10, 20, 180, 100);
+
+      // Agregar datos de texto al PDF
       dataSalarios.labels.forEach((label, index) => {
         const salario = dataSalarios.datasets[0].data[index];
-        doc.text(`${label}: C$${salario}`, 10, 20 + index * 10); // Formato de los datos
+        doc.text(`${label}: C$${salario}`, 10, 140 + index * 10); // Ajustar posición para dejar espacio a la imagen
       });
 
-      // Generar el PDF como base64
+      // Guardar el archivo PDF
       const pdfBase64 = doc.output('datauristring').split(',')[1];
-
-      // Definir la ruta temporal para el archivo PDF en el sistema de archivos del dispositivo
       const fileUri = `${FileSystem.documentDirectory}reporte_salarios.pdf`;
 
-      // Guardar el archivo PDF
       await FileSystem.writeAsStringAsync(fileUri, pdfBase64, {
-        encoding: FileSystem.EncodingType.Base64
+        encoding: FileSystem.EncodingType.Base64,
       });
 
       // Compartir el archivo PDF
       await Sharing.shareAsync(fileUri);
-      
+      setIsSharing(false); // Habilitar el botón después de compartir
     } catch (error) {
       console.error("Error al generar o compartir el PDF: ", error);
       Alert.alert('Error', 'No se pudo generar o compartir el PDF.');
+      setIsSharing(false); // Habilitar el botón si ocurre un error
     }
   };
 
-  let screenWidth = Dimensions.get("window").width
-
   return (
     <View style={styles.container}>
-      <LineChart
-        data={dataSalarios}
-        width={screenWidth-(screenWidth*0.1)}
-        height={300}
-        chartConfig={{
-          backgroundGradientFrom: "#00FFFF",
-          backgroundGradientFromOpacity: 0.1,
-          backgroundGradientTo: "#FFFFFF",
-          backgroundGradientToOpacity: 1,
-          color: (opacity = 1) => `rgba(0, 123, 255, ${opacity})`,
-        }}
-        style={{
-          borderRadius: 10
-        }}
-        verticalLabelRotation={45}
-        bezier={true}
-      />
-
-      <View style={styles.button}>
-        {/* Botón para generar y compartir PDF */}
-        <Button  title="Generar y Compartir PDF" onPress={generarPDF} />
+      <View ref={chartRef} collapsable={false} style={styles.chartContainer}>
+        <LineChart
+          data={dataSalarios}
+          width={chartWidth}
+          height={chartHeight}
+          chartConfig={{
+            backgroundGradientFrom: "#00FFFF",
+            backgroundGradientFromOpacity: 0.1,
+            backgroundGradientTo: "#FFFFFF",
+            backgroundGradientToOpacity: 1,
+            color: (opacity = 1) => `rgba(0, 123, 255, ${opacity})`,
+          }}
+          style={{
+            borderRadius: 10,
+          }}
+          verticalLabelRotation={45}
+          bezier
+        />
       </View>
 
+      <View style={styles.button}>
+        <Button title="Generar y Compartir PDF" onPress={generarPDF} disabled={isSharing} />
+      </View>
     </View>
   );
 }
@@ -75,9 +90,13 @@ export default function GraficoBezier({dataSalarios}) {
 const styles = StyleSheet.create({
   container: {
     backgroundColor: '#fff',
-    margin: 10
+    margin: 10,
+  },
+  chartContainer: {
+    alignItems: 'center',
+    marginVertical: 10,
   },
   button: {
-    marginTop: 10
+    marginTop: 10,
   },
 });
